@@ -169,7 +169,35 @@ Expected paths include:
 3rdParty/momask-codes/checkpoints/t2m/length_estimator/model/finest.tar
 ```
 
-## 4. Verify TTS
+### Character FBX Asset
+
+The demo expects a Mixamo-style FBX character at:
+
+```text
+asset/Ch15_nonPBR.fbx
+```
+
+This file is intentionally not tracked by git because it is larger than GitHub's normal 100 MB file limit. Copy the FBX file into `asset/` manually, or track it with Git LFS.
+
+Expected path:
+
+```text
+asset/Ch15_nonPBR.fbx
+```
+
+## 4. Verify Setup
+
+Check that the required local files exist:
+
+```bash
+test -f 3rdParty/models/faster-whisper-small/model.bin
+test -f 3rdParty/models/Piper/en_US-ryan-medium.onnx
+test -f 3rdParty/models/Piper/en_US-ryan-medium.onnx.json
+test -f 3rdParty/momask-codes/checkpoints/t2m/length_estimator/model/finest.tar
+test -f asset/Ch15_nonPBR.fbx
+```
+
+Verify TTS:
 
 ```bash
 python - <<'PY'
@@ -237,3 +265,27 @@ The script will:
 - MoMask generation can be slow on CPU.
 - The Blender path is machine-specific; edit `BLENDER` in the scripts if Blender is installed elsewhere.
 - KeeMap retarget uses `3rdParty/momask-codes/assets/mapping.json`, which matches the current Mixamo skeleton prefix `mixamorig:`.
+- Large models/checkpoints/output files are intentionally excluded from git; download them using the commands above.
+- `asset/Ch15_nonPBR.fbx` is larger than GitHub's normal 100 MB file limit, so place it manually at that path or track it with Git LFS.
+
+## GitHub Upload Notes
+
+Before pushing, make sure the repository does not include generated outputs or downloaded models:
+
+```bash
+git status --short
+git add .gitignore README.md requirements.txt environment.yml project_explanation.md scripts src docs examples 3rdParty/KeeMapAnimRetarget 3rdParty/momask-codes asset
+git status --short
+```
+
+If `git add 3rdParty/momask-codes` or `git add 3rdParty/KeeMapAnimRetarget` warns about an embedded git repository, either commit them as proper submodules or remove the nested `.git` directory before adding their source code to this repository.
+
+If you want to include the FBX character file, use Git LFS:
+
+```bash
+git lfs install
+git lfs track "asset/*.fbx"
+git add .gitattributes asset/Ch15_nonPBR.fbx
+```
+
+Otherwise, keep `asset/*.fbx` ignored and copy/download the character file manually after cloning.

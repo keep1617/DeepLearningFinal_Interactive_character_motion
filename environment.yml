@@ -1,0 +1,40 @@
+name: momask5080
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - ffmpeg
+  - portaudio
+  - libsndfile
+  - numpy<2
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - pillow
+  - pyyaml
+  - tqdm
+  - joblib
+  - trimesh
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pip:
+      - sounddevice
+      - soundfile
+      - faster-whisper
+      - transformers
+      - accelerate
+      - safetensors
+      - piper-tts
+      - onnxruntime
+      - git+https://github.com/openai/CLIP.git
+      - einops==0.6.1
+      - ffmpy==0.3.1
+      - ftfy==6.1.1
+      - gdown==4.7.1
+      - smplx==0.1.28
+      - vector-quantize-pytorch==1.6.30
+      - huggingface_hub

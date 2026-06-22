@@ -1,0 +1,41 @@
+# Core numerical/runtime packages
+numpy<2
+scipy
+scikit-learn
+matplotlib
+Pillow
+PyYAML
+tqdm
+joblib
+trimesh
+
+# Audio I/O and playback-related Python bindings
+sounddevice
+soundfile
+
+# STT
+faster-whisper
+
+# LLM
+torch
+torchvision
+torchaudio
+transformers
+accelerate
+safetensors
+
+# TTS
+piper-tts
+onnxruntime
+
+# MoMask / motion generation
+clip @ git+https://github.com/openai/CLIP.git
+einops==0.6.1
+ffmpy==0.3.1
+ftfy==6.1.1
+gdown==4.7.1
+smplx==0.1.28
+vector-quantize-pytorch==1.6.30
+
+# Model downloads
+huggingface_hub

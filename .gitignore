@@ -1,0 +1,48 @@
+# Python/cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environments
+.env
+.venv/
+venv/
+env/
+
+# Generated demo artifacts
+outputs/
+scripts/outputs/
+scripts/mic_input.wav
+examples/out/
+
+# Large local model/checkpoint assets
+3rdParty/models/
+3rdParty/momask-codes/checkpoints/
+3rdParty/momask-codes/generation/
+3rdParty/momask-codes/**/__pycache__/
+
+# Nested third-party git repos installed locally
+3rdParty/faster-whisper/
+3rdParty/MeloTTS/
+3rdParty/**/.git/
+
+# Large binary assets: use Git LFS or download/place manually
+asset/*.fbx
+
+# Blender/temp files
+*.blend1
+*.blend2
+*.blend@
+
+# Media/model binaries
+*.mp4
+*.wav
+*.onnx
+*.pth
+*.pt
+*.bin
+*.safetensors
+*.tar
