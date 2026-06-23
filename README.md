@@ -117,9 +117,8 @@ Then place the zip file inside `3rdParty/momask-codes` and extract it there:
 
 ```bash
 cd momask-codes
-mkdir checkpoints
-mkdir checkpoints/t2m
-cp ~/Downloads/humanml3d_models.zip 3rdParty/momask-codes/checkpoints/t2m
+mkdir -p 3rdParty/momask-codes/checkpoints/t2m
+cp ~/Downloads/humanml3d_models.zip 3rdParty/momask-codes/checkpoints/t2m/
 unzip -o humanml3d_models.zip
 cd ../..
 ```
