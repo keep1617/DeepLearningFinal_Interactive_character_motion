@@ -9,7 +9,7 @@ dependencies:
   - ffmpeg
   - portaudio
   - libsndfile
-  - numpy<2
+  - numpy=1.23.5
   - scipy
   - scikit-learn
   - matplotlib

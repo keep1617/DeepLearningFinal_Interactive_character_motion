@@ -1,5 +1,5 @@
 # Core numerical/runtime packages
-numpy<2
+numpy==1.23.5
 scipy
 scikit-learn
 matplotlib

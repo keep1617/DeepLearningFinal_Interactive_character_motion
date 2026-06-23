@@ -68,11 +68,46 @@ conda env create -f environment.yml
 conda activate momask5080
 ```
 
+This environment pins `numpy==1.23.5`. Do not upgrade NumPy: the original MoMask code uses `np.float`, which was removed in NumPy 1.24.
+
+For a clean reinstall:
+
+```bash
+conda env remove -n momask5080
+conda env create -f environment.yml
+conda activate momask5080
+```
+
+If you already created the environment and see `AttributeError: module 'numpy' has no attribute 'float'`, fix it with:
+
+```bash
+conda activate momask5080
+conda install -c conda-forge numpy=1.23.5 -y
+```
+
+Verify:
+
+```bash
+python - <<'PY'
+import numpy as np
+print(np.__version__)
+print(hasattr(np, "float"))
+PY
+```
+
+Expected output:
+
+```text
+1.23.5
+True
+```
+
 Manual fallback:
 
 ```bash
 conda create -n momask5080 python=3.10 -y
 conda activate momask5080
+conda install -c conda-forge numpy=1.23.5 ffmpeg portaudio libsndfile -y
 pip install torch torchvision torchaudio
 pip install -r requirements.txt
 ```
@@ -81,7 +116,10 @@ If MoMask reports a missing package after setup:
 
 ```bash
 pip install -r 3rdParty/momask-codes/requirements_5080.txt
+conda install -c conda-forge numpy=1.23.5 -y
 ```
+
+Run the NumPy verification command above again after installing extra MoMask packages.
 
 ## 3. Download Models And Assets
 
@@ -200,7 +238,7 @@ hf download Qwen/Qwen3-0.6B \
 
 ```bash
 
-cd ../
+cd ../..
 mkdir 3rdParty/models/Piper
 
 curl -L -o 3rdParty/models/Piper/en_US-ryan-medium.onnx \
