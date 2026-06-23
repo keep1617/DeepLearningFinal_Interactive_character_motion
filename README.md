@@ -1,6 +1,6 @@
-# DeepLearning Final: Voice-to-Motion Character Demo
+# DeepLearning Final: Interactive Character Motion
 
-마이크 음성을 입력받아 STT로 텍스트를 만들고, 로컬 LLM이 캐릭터 대사와 motion prompt를 생성한 뒤, TTS 음성과 MoMask motion을 Blender 캐릭터에 적용하는 인터랙티브 데모입니다.
+마이크로 녹음한 말을 STT로 텍스트화하고, 로컬 LLM이 캐릭터 대사와 motion prompt를 만든 뒤, TTS 음성과 MoMask motion을 Blender 캐릭터에 적용하는 인터랙티브 데모입니다.
 
 ## Pipeline
 
@@ -11,70 +11,63 @@ microphone
        -> talk
        -> motion_instruction
   -> Piper TTS
-       -> talk.wav
+       -> outputs/talk.wav
   -> MoMask text-to-motion
        -> joints .npy
        -> _ik.bvh
-  -> Blender + KeeMapRig
+  -> Blender + KeeMap
        -> Mixamo FBX retarget preview
 ```
 
 ## Repository Layout
 
 ```text
-scripts/model_load.py                    # STT/LLM/TTS runtime loader
+scripts/model_load.py                    # STT / LLM / TTS loader
 src/momask_runtime.py                    # reusable MoMask runtime
-scripts/run_demo_once_blender.py         # main Blender preview demo
+scripts/run_demo_once_blender.py         # main demo entry point
 scripts/blender_keemap_retarget_preview.py
-3rdParty/momask-codes/                   # MoMask code/checkpoints
-3rdParty/models/                         # local STT/LLM/TTS models
+scripts/download_blender.sh              # Blender downloader
+requirements.txt                         # pip dependencies
+environment.yml                          # conda environment
+project_explanation.md                   # project/model/pipeline summary
+
 3rdParty/KeeMapAnimRetarget/             # Blender retarget addon
-asset/Ch15_nonPBR.fbx                    # Mixamo character
+3rdParty/momask-codes/                   # cloned during setup, not committed
+3rdParty/models/                         # downloaded local models, not committed
+asset/Ch15_nonPBR.fbx                    # Mixamo character, not committed by default
 ```
 
 ## 1. System Dependencies
-
-Install basic audio/video dependencies:
 
 ```bash
 sudo apt update
 sudo apt install -y ffmpeg portaudio19-dev libsndfile1 curl git unzip
 ```
 
-Download Blender with the helper script:
+Download Blender:
 
 ```bash
 bash scripts/download_blender.sh
 ```
 
-Default install path:
+The script prints the Blender executable path on the last line. You will pass that path to the demo with `--blender`.
 
-```text
-/home/adfa5456/Downloads/blender-5.0.1-linux-x64/blender
-```
-
-To change the version or install location:
+To use a different Blender version or install directory:
 
 ```bash
 BLENDER_VERSION=5.0.1 BLENDER_INSTALL_ROOT="$HOME/Downloads" bash scripts/download_blender.sh
 ```
 
-The path is currently hardcoded in:
-
-```text
-scripts/run_demo_once_blender.py
-```
-
 ## 2. Conda Environment
 
-Create and activate the demo environment:
+Recommended:
 
 ```bash
 conda env create -f environment.yml
 conda activate momask5080
 ```
 
-If you prefer manual installation:
+Manual fallback:
 
 ```bash
 conda create -n momask5080 python=3.10 -y
@@ -83,18 +76,59 @@ pip install torch torchvision torchaudio
 pip install -r requirements.txt
 ```
 
-If MoMask reports a missing package, also install the bundled MoMask requirements:
+If MoMask reports a missing package after setup:
 
 ```bash
 pip install -r 3rdParty/momask-codes/requirements_5080.txt
 ```
 
-## 3. Download Models
+## 3. Download Models And Assets
 
-Create model folders:
+Create the local model directory:
 
 ```bash
 mkdir -p 3rdParty/models
+```
+
+### MoMask Source
+
+Clone MoMask into the path expected by the runtime:
+
+```bash
+mkdir -p 3rdParty
+git clone https://github.com/EricGuo5513/momask-codes.git 3rdParty/momask-codes
+```
+
+`3rdParty/momask-codes` is intentionally not committed to this repository. Clone it during setup.
+
+### MoMask Checkpoints
+
+MoMask checkpoint download script is not reliable for this project setup. Download the checkpoint zip manually from Google Drive:
+
+[MoMask humanml3d_models.zip Drive folder](https://drive.google.com/drive/folders/1sHajltuE2xgHh91H9pFpMAYAkHaX9o57)
+
+Download:
+
+```text
+humanml3d_models.zip
+```
+
+Then place the zip file inside `3rdParty/momask-codes` and extract it there:
+
+```bash
+cp ~/Downloads/humanml3d_models.zip 3rdParty/momask-codes/
+cd 3rdParty/momask-codes
+unzip -o humanml3d_models.zip
+cd ../..
+```
+
+Expected checkpoint files include:
+
+```text
+3rdParty/momask-codes/checkpoints/t2m/t2m_nlayer8_nhead6_ld384_ff1024_cdp0.1_rvq6ns/model/latest.tar
+3rdParty/momask-codes/checkpoints/t2m/rvq_nq6_dc512_nc512_noshare_qdp0.2/model/net_best_fid.tar
+3rdParty/momask-codes/checkpoints/t2m/tres_nlayer8_ld384_ff1024_rvq6ns_cdp0.2_sw/model/net_best_fid.tar
+3rdParty/momask-codes/checkpoints/t2m/length_estimator/model/finest.tar
 ```
 
 ### STT: faster-whisper-small
@@ -129,7 +163,7 @@ huggingface-cli download Qwen/Qwen3-0.6B \
   --local-dir-use-symlinks False
 ```
 
-`scripts/model_load.py` automatically uses `Qwen3-4B-Instruct-2507` if present, otherwise `Qwen3-0.6B`.
+`scripts/model_load.py` uses `Qwen3-4B-Instruct-2507` if it exists, otherwise `Qwen3-0.6B`.
 
 ### TTS: Piper Male Voice
 
@@ -150,54 +184,38 @@ Expected paths:
 3rdParty/models/Piper/en_US-ryan-medium.onnx.json
 ```
 
-### MoMask Checkpoints
+### KeeMap Blender Addon
 
-From the MoMask directory:
-
-```bash
-cd 3rdParty/momask-codes
-bash prepare/download_models.sh
-cd ../..
-```
-
-Expected paths include:
+The demo expects KeeMap at:
 
 ```text
-3rdParty/momask-codes/checkpoints/t2m/t2m_nlayer8_nhead6_ld384_ff1024_cdp0.1_rvq6ns/model/latest.tar
-3rdParty/momask-codes/checkpoints/t2m/rvq_nq6_dc512_nc512_noshare_qdp0.2/model/net_best_fid.tar
-3rdParty/momask-codes/checkpoints/t2m/tres_nlayer8_ld384_ff1024_rvq6ns_cdp0.2_sw/model/net_best_fid.tar
-3rdParty/momask-codes/checkpoints/t2m/length_estimator/model/finest.tar
+3rdParty/KeeMapAnimRetarget
 ```
 
-### Character FBX Asset
+You do not need to install the addon manually from Blender Preferences. `scripts/blender_keemap_retarget_preview.py` registers the local addon automatically when the demo starts.
 
-The demo expects a Mixamo-style FBX character at:
+### Character FBX
+
+The demo expects a Mixamo-style character at:
 
 ```text
 asset/Ch15_nonPBR.fbx
 ```
 
-This file is intentionally not tracked by git because it is larger than GitHub's normal 100 MB file limit. Copy the FBX file into `asset/` manually, or track it with Git LFS.
-
-Expected path:
-
-```text
-asset/Ch15_nonPBR.fbx
-```
+This FBX is not tracked by default because it is larger than GitHub's normal 100 MB file limit. Copy it into `asset/` manually, or use Git LFS if you want to commit it.
 
 ## 4. Verify Setup
-
-Check that the required local files exist:
 
 ```bash
 test -f 3rdParty/models/faster-whisper-small/model.bin
 test -f 3rdParty/models/Piper/en_US-ryan-medium.onnx
 test -f 3rdParty/models/Piper/en_US-ryan-medium.onnx.json
 test -f 3rdParty/momask-codes/checkpoints/t2m/length_estimator/model/finest.tar
+test -d 3rdParty/KeeMapAnimRetarget
 test -f asset/Ch15_nonPBR.fbx
 ```
 
-Verify TTS:
+Verify Piper TTS:
 
 ```bash
 python - <<'PY'
@@ -218,7 +236,7 @@ Expected output:
 outputs/piper_smoke.wav
 ```
 
-## 5. Run Blender Preview Demo
+## 5. Run The Demo
 
 Activate the environment:
 
@@ -226,9 +244,23 @@ Activate the environment:
 conda activate momask5080
 ```
 
-Run:
+Use the Blender path printed by the downloader:
 
 ```bash
+BLENDER_BIN="$(bash scripts/download_blender.sh | tail -n 1)"
+python scripts/run_demo_once_blender.py --blender "$BLENDER_BIN"
+```
+
+Or pass your own Blender executable directly:
+
+```bash
+python scripts/run_demo_once_blender.py --blender /path/to/blender
+```
+
+You can also set `BLENDER` once and omit the argument:
+
+```bash
+export BLENDER=/path/to/blender
 python scripts/run_demo_once_blender.py
 ```
 
@@ -239,46 +271,52 @@ r  -> record one utterance and open Blender preview
 q  -> quit
 ```
 
-When prompted:
+Recording flow:
 
 ```text
 Press Enter to start recording...
 Recording... Press Enter to stop.
 ```
 
-Press Enter once to start recording, speak, then press Enter again to stop.
+Press Enter once, speak, then press Enter again to stop. The demo then transcribes your voice, generates the character response, creates motion with MoMask, and opens a Blender preview in the trench scene.
 
-The script will:
+## Outputs
 
-1. Save microphone audio to `scripts/mic_input.wav`.
-2. Transcribe it with faster-whisper.
-3. Generate `talk` and `motion_instruction` with Qwen.
-4. Synthesize `talk` with Piper male TTS to `outputs/talk.wav`.
-5. Generate motion with MoMask.
-6. Open Blender and retarget `_ik.bvh` to `asset/Ch15_nonPBR.fbx`.
-7. Preview the animation in a procedural trench scene.
+```text
+scripts/mic_input.wav
+outputs/talk.wav
+3rdParty/momask-codes/generation/demo_run/
+```
+
+The current main demo previews directly in Blender UI. It does not render an mp4 by default.
 
 ## Notes
 
-- `run_demo_once_blender.py` is the main demo entry point.
-- The demo previews directly in Blender UI and does not render mp4.
-- MoMask generation can be slow on CPU.
-- The Blender path is machine-specific; edit `BLENDER` in the scripts if Blender is installed elsewhere.
-- KeeMap retarget uses `3rdParty/momask-codes/assets/mapping.json`, which matches the current Mixamo skeleton prefix `mixamorig:`.
-- Large models/checkpoints/output files are intentionally excluded from git; download them using the commands above.
-- `asset/Ch15_nonPBR.fbx` is larger than GitHub's normal 100 MB file limit, so place it manually at that path or track it with Git LFS.
+- `scripts/run_demo_once_blender.py` is the only main demo entry point.
+- Blender path is configurable. Pass it with `--blender`, set `BLENDER`, or make `blender` available on PATH.
+- MoMask generation can be slow on CPU. Use `--gpu-id 0` if your CUDA setup is ready.
+- KeeMap uses `3rdParty/momask-codes/assets/mapping.json` for the current Mixamo skeleton mapping.
+- Downloaded models, checkpoints, generated outputs, and large media files are ignored by git.
 
 ## GitHub Upload Notes
 
-Before pushing, make sure the repository does not include generated outputs or downloaded models:
+Before pushing, make sure generated outputs and downloaded models are not staged:
 
 ```bash
 git status --short
-git add .gitignore README.md requirements.txt environment.yml project_explanation.md scripts src docs examples 3rdParty/KeeMapAnimRetarget 3rdParty/momask-codes asset
+git add .gitignore README.md requirements.txt environment.yml project_explanation.md scripts src 3rdParty/KeeMapAnimRetarget
 git status --short
 ```
 
-If `git add 3rdParty/momask-codes` or `git add 3rdParty/KeeMapAnimRetarget` warns about an embedded git repository, either commit them as proper submodules or remove the nested `.git` directory before adding their source code to this repository.
+`3rdParty/momask-codes` should not be committed. If it was accidentally added before, remove it from the git index:
+
+```bash
+git rm -r --cached 3rdParty/momask-codes
+```
+
+Users clone MoMask during setup with the command above.
+
+If `git add 3rdParty/KeeMapAnimRetarget` warns about an embedded git repository, either commit it as a proper submodule or remove the nested `.git` directory before adding its source code.
 
 If you want to include the FBX character file, use Git LFS:
 
@@ -288,4 +326,4 @@ git lfs track "asset/*.fbx"
 git add .gitattributes asset/Ch15_nonPBR.fbx
 ```
 
-Otherwise, keep `asset/*.fbx` ignored and copy/download the character file manually after cloning.
+Otherwise, keep `asset/*.fbx` ignored and copy the character file manually after cloning.

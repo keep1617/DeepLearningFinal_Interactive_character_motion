@@ -1,4 +1,7 @@
+import argparse
+import os
 import queue
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -15,11 +18,67 @@ sys.path.append(str(ROOT / "src"))
 from momask_runtime import MomaskRuntime
 
 
-BLENDER = "/home/adfa5456/Downloads/blender-5.0.1-linux-x64/blender"
 SAMPLERATE = 16000
 CHANNELS = 1
 MIC_WAV = ROOT / "scripts" / "mic_input.wav"
 TTS_WAV = ROOT / "outputs" / "talk.wav"
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Record voice, generate MoMask motion, and preview it in Blender."
+    )
+    parser.add_argument(
+        "--blender",
+        default=None,
+        help="Path to the Blender executable. If omitted, uses $BLENDER or PATH.",
+    )
+    parser.add_argument(
+        "--gpu-id",
+        type=int,
+        default=-1,
+        help="GPU id for MoMask. Use -1 for CPU.",
+    )
+    parser.add_argument(
+        "--momask-ext",
+        default="demo_run",
+        help="MoMask output run name under 3rdParty/momask-codes/generation/.",
+    )
+    return parser.parse_args()
+
+
+def resolve_blender_executable(blender_arg: str | None) -> str:
+    explicit_candidates = [
+        ("--blender", blender_arg),
+        ("BLENDER", os.environ.get("BLENDER")),
+    ]
+
+    for source, candidate in explicit_candidates:
+        if not candidate:
+            continue
+
+        expanded = Path(candidate).expanduser()
+        if expanded.exists():
+            if not expanded.is_file():
+                raise FileNotFoundError(f"{source} is not a file: {expanded}")
+            if not os.access(expanded, os.X_OK):
+                raise PermissionError(f"{source} is not executable: {expanded}")
+            return str(expanded.resolve())
+
+        resolved = shutil.which(candidate)
+        if resolved:
+            return resolved
+
+        raise FileNotFoundError(f"{source} does not point to Blender: {candidate}")
+
+    resolved = shutil.which("blender")
+    if resolved:
+        return resolved
+
+    raise FileNotFoundError(
+        "Blender executable not found. Pass --blender /path/to/blender, "
+        "set BLENDER=/path/to/blender, or add blender to PATH."
+    )
 
 
 def record_audio(output_path: Path) -> bool:
@@ -57,10 +116,14 @@ def record_audio(output_path: Path) -> bool:
     return True
 
 
-def preview_in_blender(ik_bvh: Path, tts_audio: str | Path) -> subprocess.Popen:
+def preview_in_blender(
+    blender_executable: str,
+    ik_bvh: Path,
+    tts_audio: str | Path,
+) -> subprocess.Popen:
     return subprocess.Popen(
         [
-            BLENDER,
+            blender_executable,
             "--factory-startup",
             "--python",
             str(ROOT / "scripts" / "blender_keemap_retarget_preview.py"),
@@ -81,7 +144,11 @@ def preview_in_blender(ik_bvh: Path, tts_audio: str | Path) -> subprocess.Popen:
     )
 
 
-def run_turn(models: DemoModels, momask: MomaskRuntime) -> subprocess.Popen | None:
+def run_turn(
+    models: DemoModels,
+    momask: MomaskRuntime,
+    blender_executable: str,
+) -> subprocess.Popen | None:
     if not record_audio(MIC_WAV):
         return None
 
@@ -93,13 +160,25 @@ def run_turn(models: DemoModels, momask: MomaskRuntime) -> subprocess.Popen | No
 
     motion = momask.generate(motion_prompt)
     print(f"Opening Blender preview: {motion['ik_bvh']}")
-    return preview_in_blender(Path(motion["ik_bvh"]), result["tts_output"])
+    return preview_in_blender(
+        blender_executable,
+        Path(motion["ik_bvh"]),
+        result["tts_output"],
+    )
 
 
 def main() -> None:
+    args = parse_args()
+    blender_executable = resolve_blender_executable(args.blender)
+
     print("Loading demo models...")
     models = DemoModels(tts_config=TTSConfig(engine="piper"))
-    momask = MomaskRuntime(gpu_id=-1, ext="demo_run", write_preview_mp4=False)
+    momask = MomaskRuntime(
+        gpu_id=args.gpu_id,
+        ext=args.momask_ext,
+        write_preview_mp4=False,
+    )
+    print(f"Blender: {blender_executable}")
     print("Ready.")
 
     blender_proc: subprocess.Popen | None = None
@@ -112,7 +191,7 @@ def main() -> None:
 
         if blender_proc is not None and blender_proc.poll() is None:
             blender_proc.terminate()
-        blender_proc = run_turn(models, momask)
+        blender_proc = run_turn(models, momask, blender_executable)
 
 
 if __name__ == "__main__":

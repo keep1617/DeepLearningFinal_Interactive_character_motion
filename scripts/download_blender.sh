@@ -11,7 +11,8 @@ DOWNLOAD_URL="https://download.blender.org/release/Blender${BLENDER_MAJOR}.0/${A
 mkdir -p "${INSTALL_ROOT}"
 
 if [ -x "${TARGET_DIR}/blender" ]; then
-  echo "Blender already installed: ${TARGET_DIR}/blender"
+  echo "Blender already installed:"
+  echo "${TARGET_DIR}/blender"
   exit 0
 fi
 
