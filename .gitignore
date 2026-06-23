@@ -20,6 +20,7 @@ examples/out/
 
 # Large local model/checkpoint assets
 3rdParty/models/
+3rdParty/momask-codes/
 3rdParty/momask-codes/checkpoints/
 3rdParty/momask-codes/generation/
 3rdParty/momask-codes/**/__pycache__/
