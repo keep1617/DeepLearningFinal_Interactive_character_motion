@@ -95,7 +95,7 @@ mkdir -p 3rdParty/models
 Clone MoMask into the path expected by the runtime:
 
 ```bash
-mkdir -p 3rdParty
+cd 3rdParty
 git clone https://github.com/EricGuo5513/momask-codes.git 3rdParty/momask-codes
 ```
 
@@ -116,8 +116,10 @@ humanml3d_models.zip
 Then place the zip file inside `3rdParty/momask-codes` and extract it there:
 
 ```bash
-cp ~/Downloads/humanml3d_models.zip 3rdParty/momask-codes/
-cd 3rdParty/momask-codes
+cd momask-codes
+mkdir checkpoints
+mkdir checkpoints/t2m
+cp ~/Downloads/humanml3d_models.zip 3rdParty/momask-codes/checkpoints/t2m
 unzip -o humanml3d_models.zip
 cd ../..
 ```
