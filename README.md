@@ -275,6 +275,16 @@ asset/Ch15_nonPBR.fbx
 
 This FBX is not tracked by default because it is larger than GitHub's normal 100 MB file limit. Copy it into `asset/` manually, or use Git LFS if you want to commit it.
 
+If the repository uses Git LFS for the FBX file, install Git LFS and pull the real asset after cloning:
+
+```bash
+sudo apt install -y git-lfs
+git lfs install
+git lfs pull
+```
+
+After pulling, `asset/Ch15_nonPBR.fbx` should be a large binary file, not a small text pointer file.
+
 ## 4. Verify Setup
 
 ```bash
