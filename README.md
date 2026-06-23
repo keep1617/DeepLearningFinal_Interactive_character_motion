@@ -27,6 +27,7 @@ src/momask_runtime.py                    # reusable MoMask runtime
 scripts/run_demo_once_blender.py         # main demo entry point
 scripts/blender_keemap_retarget_preview.py
 scripts/download_blender.sh              # Blender downloader
+scripts/download_hf_models.py            # faster-whisper / Qwen downloader
 requirements.txt                         # pip dependencies
 environment.yml                          # conda environment
 project_explanation.md                   # project/model/pipeline summary
@@ -90,12 +91,26 @@ Create the local model directory:
 mkdir -p 3rdParty/models
 ```
 
+The old `huggingface-cli` command is deprecated. Use the included Python downloader or the current `hf download` command shown below.
+
+To download faster-whisper and the recommended Qwen model together:
+
+```bash
+python scripts/download_hf_models.py --qwen 4b
+```
+
+For a smaller Qwen model:
+
+```bash
+python scripts/download_hf_models.py --qwen 0.6b
+```
+
 ### MoMask Source
 
 Clone MoMask into the path expected by the runtime:
 
 ```bash
-cd 3rdParty
+mkdir -p 3rdParty
 git clone https://github.com/EricGuo5513/momask-codes.git 3rdParty/momask-codes
 ```
 
@@ -135,10 +150,17 @@ Expected checkpoint files include:
 
 ### STT: faster-whisper-small
 
+Preferred:
+
 ```bash
-huggingface-cli download Systran/faster-whisper-small \
-  --local-dir 3rdParty/models/faster-whisper-small \
-  --local-dir-use-symlinks False
+python scripts/download_hf_models.py --skip-qwen
+```
+
+Equivalent current Hugging Face CLI command:
+
+```bash
+hf download Systran/faster-whisper-small \
+  --local-dir 3rdParty/models/faster-whisper-small
 ```
 
 Expected path:
@@ -149,20 +171,26 @@ Expected path:
 
 ### LLM: Qwen
 
-Recommended:
+Recommended model:
 
 ```bash
-huggingface-cli download Qwen/Qwen3-4B-Instruct-2507 \
-  --local-dir 3rdParty/models/Qwen3-4B-Instruct-2507 \
-  --local-dir-use-symlinks False
+python scripts/download_hf_models.py --skip-whisper --qwen 4b
 ```
 
-Smaller fallback:
+Smaller fallback model:
 
 ```bash
-huggingface-cli download Qwen/Qwen3-0.6B \
-  --local-dir 3rdParty/models/Qwen3-0.6B \
-  --local-dir-use-symlinks False
+python scripts/download_hf_models.py --skip-whisper --qwen 0.6b
+```
+
+Equivalent current Hugging Face CLI commands:
+
+```bash
+hf download Qwen/Qwen3-4B-Instruct-2507 \
+  --local-dir 3rdParty/models/Qwen3-4B-Instruct-2507
+
+hf download Qwen/Qwen3-0.6B \
+  --local-dir 3rdParty/models/Qwen3-0.6B
 ```
 
 `scripts/model_load.py` uses `Qwen3-4B-Instruct-2507` if it exists, otherwise `Qwen3-0.6B`.
