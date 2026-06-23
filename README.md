@@ -131,7 +131,7 @@ humanml3d_models.zip
 Then place the zip file inside `3rdParty/momask-codes` and extract it there:
 
 ```bash
-cd momask-codes
+cd 3rdParty/momask-codes
 mkdir -p checkpoints/t2m
 cp ~/Downloads/humanml3d_models.zip checkpoints/t2m/
 cd checkpoints/t2m/
@@ -148,6 +148,7 @@ Expected checkpoint files include:
 3rdParty/momask-codes/checkpoints/t2m/length_estimator/model/finest.tar
 ```
 
+### If you did step 3 ```python scripts/download_hf_models.py --qwen 4b``` you don't need to do under processes. You should do Piper!
 ### STT: faster-whisper-small
 
 Preferred:
@@ -198,7 +199,9 @@ hf download Qwen/Qwen3-0.6B \
 ### TTS: Piper Male Voice
 
 ```bash
-mkdir -p 3rdParty/models/Piper
+
+cd ../
+mkdir 3rdParty/models/Piper
 
 curl -L -o 3rdParty/models/Piper/en_US-ryan-medium.onnx \
   https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/medium/en_US-ryan-medium.onnx
