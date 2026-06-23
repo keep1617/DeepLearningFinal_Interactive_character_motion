@@ -328,11 +328,35 @@ Or pass your own Blender executable directly:
 python scripts/run_demo_once_blender.py --blender /path/to/blender
 ```
 
+Example:
+
+```bash
+python scripts/run_demo_once_blender.py --blender ~/Downloads/blender-5.0.1-linux-x64/blender
+```
+
 You can also set `BLENDER` once and omit the argument:
 
 ```bash
 export BLENDER=/path/to/blender
 python scripts/run_demo_once_blender.py
+```
+
+Audio device options:
+
+```bash
+python scripts/run_demo_once_blender.py --list-audio-devices
+```
+
+If the default microphone fails, choose an input device id from the list:
+
+```bash
+python scripts/run_demo_once_blender.py --blender ~/Downloads/blender-5.0.1-linux-x64/blender --input-device 2
+```
+
+If that PC needs a specific microphone sample rate:
+
+```bash
+python scripts/run_demo_once_blender.py --blender ~/Downloads/blender-5.0.1-linux-x64/blender --input-device 2 --samplerate 48000
 ```
 
 Controls:
@@ -346,7 +370,7 @@ Recording flow:
 
 ```text
 Press Enter to start recording...
-Recording... Press Enter to stop.
+Recording at <device sample rate> Hz... Press Enter to stop.
 ```
 
 Press Enter once, speak, then press Enter again to stop. The demo then transcribes your voice, generates the character response, creates motion with MoMask, and opens a Blender preview in the trench scene.
@@ -360,6 +384,23 @@ outputs/talk.wav
 ```
 
 The current main demo previews directly in Blender UI. It does not render an mp4 by default.
+
+## Troubleshooting
+
+### Invalid microphone sample rate
+
+If another PC shows:
+
+```text
+sounddevice.PortAudioError: Error opening InputStream: Invalid sample rate
+```
+
+the microphone probably does not support the old fixed `16000 Hz` input rate. `run_demo_once_blender.py` now uses the input device's default sample rate automatically, but you can still select the device and sample rate manually:
+
+```bash
+python scripts/run_demo_once_blender.py --list-audio-devices
+python scripts/run_demo_once_blender.py --blender ~/Downloads/blender-5.0.1-linux-x64/blender --input-device 2 --samplerate 48000
+```
 
 ## Notes
 
